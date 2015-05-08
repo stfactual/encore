@@ -1,4 +1,4 @@
-(defproject com.taoensso/encore "1.3.1"
+(defproject stfactual/encore "1.3.1"
   :author "Peter Taoussanis <https://www.taoensso.com>"
   :description "Shared support utils for taoensso.com Clojure libs"
   :url "https://github.com/ptaoussanis/encore"
@@ -62,12 +62,8 @@
    "deploy-lib" ["do" "build-once," "deploy" "clojars," "install"]
    "start-dev"  ["with-profile" "+dev*" "repl" ":headless"]}
 
-  :repositories
-  {"sonatype"
-   {:url "http://oss.sonatype.org/content/repositories/releases"
-    :snapshots false
-    :releases {:checksum :fail}}
-   "sonatype-snapshots"
-   {:url "http://oss.sonatype.org/content/repositories/snapshots"
-    :snapshots true
-    :releases {:checksum :fail :update :always}}})
+  :repositories {"factual" "http://maven.corp.factual.com/nexus/content/groups/public/"
+                 "releases" {:url "http://maven.corp.factual.com/nexus/content/repositories/releases"
+                             :sign-releases false}
+                 "snapshots" {:url      "http://maven.corp.factual.com/nexus/content/repositories/snapshots/"
+                              :snapshot {:update :always}}})
