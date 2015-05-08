@@ -15,7 +15,7 @@
   :dependencies
   [[org.clojure/clojure      "1.4.0"]
    ;; [org.clojure/clojure   "1.5.1"] ; Soon...
-   [org.clojure/tools.reader "0.9.2"]]
+   ]
 
   :plugins
   [[lein-pprint                     "1.1.2"]

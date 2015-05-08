@@ -6,7 +6,7 @@
                    [clojure.set         :as set]
                    [clojure.java.io     :as io]
                    ;; [clojure.core.async    :as async]
-                   [clojure.tools.reader.edn :as edn])
+                   )
   #+clj  (:import  [java.util Date Locale TimeZone]
                    [java.text SimpleDateFormat]
                    ;; [org.apache.commons.codec.binary Base64]
@@ -1955,7 +1955,7 @@
                             :text (.getResponseText xhr)
                             :json (.getResponseJson xhr)
                             :xml  (.getResponseXml  xhr)
-                            :edn  (edn/read-string (.getResponseText xhr)))
+                            :edn  (read-string (.getResponseText xhr)))
                           ;; NB Temp workaround for http://goo.gl/UW7773:
                           (catch js/Error #_:default e
                             ;; Undocumented, subject to change:
