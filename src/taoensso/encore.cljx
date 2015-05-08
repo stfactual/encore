@@ -6,7 +6,7 @@
   #+clj  (:require [clojure.string      :as str]
                    [clojure.java.io     :as io]
                    ;; [clojure.core.async  :as async]
-                   [clojure.tools.reader.edn :as edn])
+                   )
   ;; #+clj  (:import [org.apache.commons.codec.binary Base64])
   #+clj  (:import  [java.util Date Locale TimeZone]
                    [java.text SimpleDateFormat])
@@ -1202,7 +1202,7 @@
                            :text (.getResponseText xhr)
                            :json (.getResponseJson xhr)
                            :xml  (.getResponseXml  xhr)
-                           :edn  (edn/read-string (.getResponseText xhr)))))
+                           :edn  (read-string (.getResponseText xhr)))))
 
                      :status (when got-resp? status) ; nil or http-status
                      :error ; nil, error status, or keyword
