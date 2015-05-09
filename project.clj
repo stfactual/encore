@@ -1,4 +1,4 @@
-(defproject stfactual/encore "1.3.2"
+(defproject stfactual/encore "1.3.3"
   :author "Peter Taoussanis <https://www.taoensso.com>"
   :description "Shared support utils for taoensso.com Clojure libs"
   :url "https://github.com/ptaoussanis/encore"

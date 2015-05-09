@@ -2,35 +2,19 @@
   "The utils you want, in the package you deserve™.
   Subset of the commonest Ensso utils w/o external dependencies."
   {:author "Peter Taoussanis"}
-  #+clj  (:refer-clojure :exclude [format])
-  #+clj  (:require [clojure.string      :as str]
+    (:refer-clojure :exclude [format])
+    (:require [clojure.string      :as str]
                    [clojure.java.io     :as io]
                    ;; [clojure.core.async  :as async]
                    )
-  ;; #+clj  (:import [org.apache.commons.codec.binary Base64])
-  #+clj  (:import  [java.util Date Locale TimeZone]
+  ;;   (:import [org.apache.commons.codec.binary Base64])
+    (:import  [java.util Date Locale TimeZone]
                    [java.text SimpleDateFormat])
   ;;;
-  #+cljs (:require [clojure.string    :as str]
-                   ;; [cljs.core.async   :as async]
-                   [cljs.reader       :as edn]
-                   ;;[goog.crypt.base64 :as base64]
-                   [goog.string         :as gstr]
-                   [goog.string.format]
-                   [goog.string.StringBuffer]
-                   [goog.events         :as gevents]
-                   [goog.net.XhrIo      :as gxhr]
-                   [goog.net.XhrIoPool  :as gxhr-pool]
-                   ;; [goog.net.XhrManager :as xhrm]
-                   [goog.Uri.QueryData  :as gquery-data]
-                   [goog.structs        :as gstructs]
-                   [goog.net.EventType]
-                   [goog.net.ErrorCode])
-  #+cljs (:require-macros [taoensso.encore :as encore-macros]))
+  )
 
 ;;;; Core
 
-#+clj
 (defn compiling-cljs?*
   "Returns true iff called within the context of the ClojureScript compiler's
   environment. Useful for writing macros that can produce different Clj/Cljs
@@ -148,10 +132,7 @@
   ([coll]           (nth coll 0))
   ([coll not-found] (nth coll 0 not-found)))
 
-#+clj (def format clojure.core/format) ; For easier encore/format portability
-#+cljs
-(defn format "Removed from cljs.core 0.0-1885, Ref. http://goo.gl/su7Xkj"
-  [fmt & args] (apply gstr/format fmt args))
+ (def format clojure.core/format) ; For easier encore/format portability
 
 ;;;; Coercions
 ;; `parse-x` => success, or nil
@@ -179,19 +160,13 @@
 (defn parse-int "Returns x as Long (or JavaScript integer), or nil on failure."
   [x]
   (when x
-    #+clj
+    
     (cond (number? x) (long x)
           (string? x) (try (Long/parseLong x)
                            (catch NumberFormatException _
                              (try (long (Float/parseFloat x))
                                   (catch NumberFormatException _ nil))))
-          :else       nil)
-
-    #+cljs
-    (cond (number? x) (long x)
-          (string? x) (let [x (js/parseInt x)]
-                        (when-not (js/isNaN x) x))
-          :else        nil)))
+          :else       nil)))
 
 (defn as-int [x] "Like `parse-int` but throws on unparseable non-nil."
   (when x
@@ -204,16 +179,10 @@
 (defn parse-float "Returns x as Double (or JavaScript float), or nil on failure."
   [x]
   (when x
-    #+clj
+    
     (cond (number? x) (double x)
           (string? x) (try (Double/parseDouble x)
                            (catch NumberFormatException _ nil))
-          :else       nil)
-
-    #+cljs
-    (cond (number? x) (double x)
-          (string? x) (let [x (js/parseFloat x)]
-                        (when-not (js/isNan x) x))
           :else       nil)))
 
 (defn as-float [x] "Like parse-float` but throws on unparseable non-nil."
@@ -254,7 +223,7 @@
 
 ;;;; Bytes
 
-#+clj
+
 (do
   (def ^:const bytes-class (Class/forName "[B"))
   (defn bytes? [x] (instance? bytes-class x))
@@ -280,15 +249,10 @@
 
 ;;;; Types
 
-#+clj (defn throwable? [x] (instance? Throwable x))
-#+clj (defn exception? [x] (instance? Exception x))
+ (defn throwable? [x] (instance? Throwable x))
+ (defn exception? [x] (instance? Exception x))
 (defn error? [x]
-  #+clj  (exception? x)
-  #+cljs (or (ex-data x) (instance? js/Error x)))
-
-;; (defn- chan? [x]
-;;   #+clj  (instance? clojure.core.async.impl.channels.ManyToManyChannel x)
-;;   #+cljs (instance? cljs.core.async.impl.channels.ManyToManyChannel    x))
+    (exception? x))
 
 ;;; Often useful for assertions, etc.
 (defn pos-int?  [x] (and (integer? x) (pos? x)))
@@ -306,7 +270,7 @@
         n* (if-not modifier n (* n modifier))
         rounded
         (case (or type :round)
-          ;;; Note same API for both #+clj and #+cljs:
+          ;;; Note same API for both  and s:
           :round (Math/round (double n*))        ; Round to nearest int or nplaces
           :floor (long (Math/floor (double n*))) ; Round down to -inf
           :ceil  (long (Math/ceil  (double n*))) ; Round up to +inf
@@ -329,14 +293,7 @@
   Ref. http://www.ietf.org/rfc/rfc4122.txt,
        https://gist.github.com/franks42/4159427"
   []
-  #+clj (str (java.util.UUID/randomUUID))
-  #+cljs
-  (let [fs (fn [n] (apply str (repeatedly n (fn [] (.toString (rand-int 16) 16)))))
-        g  (fn [] (.toString (bit-or 0x8 (bit-and 0x3 (rand-int 15))) 16))
-        sb (.append (goog.string.StringBuffer.)
-             (fs 8) "-" (fs 4) "-4" (fs 3) "-" (g) (fs 3) "-" (fs 12))]
-    ;;(UUID. sb) ; Equality fails on roundtrips
-    (.toString sb)))
+   (str (java.util.UUID/randomUUID)))
 
 (defn exp-backoff "Returns binary exponential backoff value."
   [nattempt & [{:keys [factor] min' :min max' :max :or {factor 1000}}]]
@@ -352,8 +309,7 @@
 ;;;; Date & time
 
 (defn now-udt []
-  #+clj  (System/currentTimeMillis)
-  #+cljs (.valueOf (js/Date.)))
+    (System/currentTimeMillis))
 
 (defn now-udt-mock-fn "Useful for testing."
   [& [mock-udts]]
@@ -403,7 +359,7 @@
     (.get p)) ; Prints twice (2 threads)
   )
 
-#+clj
+
 (def ^:private simple-date-format*
   "Returns a SimpleDateFormat ThreadLocal proxy."
   (memoize
@@ -416,7 +372,7 @@
         (when timezone (.setTimeZone sdformat timezone))
         sdformat)))))
 
-#+clj
+
 (defn simple-date-format
   "Returns a thread-local java.text.SimpleDateFormat for simple date formatting
   and parsing. Uses JVM's default locale + timezone when unspecified.
@@ -505,8 +461,8 @@
 
 (comment (assoc-some {:a :A} :b nil :c :C :d nil :e :E))
 
-#+clj (defn queue? [x] (instance? clojure.lang.PersistentQueue x))
-#+clj
+ (defn queue? [x] (instance? clojure.lang.PersistentQueue x))
+
 (defn queue "Returns a PersistentQueue containing the args."
   [& items]
   (if-not items clojure.lang.PersistentQueue/EMPTY
@@ -738,9 +694,9 @@
         end-idx*   (if-not max-len slen
                      (min (+ start-idx* max-len) slen))]
     ;; (println [start-idx* end-idx*])
-    #+clj  (.substring ^String s start-idx* end-idx*)
+      (.substring ^String s start-idx* end-idx*)
     ;; Could also use .substr:
-    #+cljs (.substring         s start-idx* end-idx*)))
+    ))
 
 (comment
   (substr "Hello"  0 5) ; "Hello"
@@ -755,19 +711,15 @@
   )
 
 (defn str-contains? [s substr]
-  #+clj  (.contains ^String s ^String substr)
-  #+cljs (not= -1 (.indexOf s substr)))
+    (.contains ^String s ^String substr)
+  )
 
 (defn str-starts-with? [s substr]
-  #+clj  (.startsWith ^String s ^String substr)
-  #+cljs (zero? (.indexOf s substr)))
+    (.startsWith ^String s ^String substr)
+  )
 
 (defn str-ends-with? [s substr]
-  #+clj  (.endsWith ^String s ^String substr)
-  #+cljs (let [s-len      (alength s) ; not .length!
-               substr-len (alength substr)]
-           (when (>= s-len substr-len)
-             (not= -1 (.indexOf s substr (- s-len substr-len))))))
+    (.endsWith ^String s ^String substr))
 
 (defn join-once
   "Like `clojure.string/join` but ensures no double separators."
@@ -797,13 +749,13 @@
 
 ;; (defn base64-enc "Encodes string as URL-safe Base64 string."
 ;;   [s] {:pre [(string? s)]}
-;;   #+clj  (Base64/encodeBase64URLSafeString (.getBytes ^String s "UTF-8"))
-;;   #+cljs (base64/encodeString s (boolean :web-safe)))
+;;     (Base64/encodeBase64URLSafeString (.getBytes ^String s "UTF-8"))
+;;   s (base64/encodeString s (boolean :web-safe)))
 
 ;; (defn base64-dec "Decodes Base64 string to string."
 ;;   [s]
-;;   #+clj  (String. (Base64/decodeBase64 ^String s) "UTF-8")
-;;   #+cljs (base64/decodeString s (boolean :web-safe)))
+;;     (String. (Base64/decodeBase64 ^String s) "UTF-8")
+;;   s (base64/decodeString s (boolean :web-safe)))
 
 ;; (comment (-> "Hello this is a test" base64-enc base64-dec))
 
@@ -817,7 +769,7 @@
 
 ;;;; IO
 
-#+clj
+
 (do
   (defn- file-resource-last-modified
     "Returns last-modified time for file backing given named resource, or nil if
@@ -1059,7 +1011,7 @@
 (defmacro time-ns "Returns number of nanoseconds it takes to execute body."
   [& body] `(let [t0# (System/nanoTime)] ~@body (- (System/nanoTime) t0#)))
 
-#+clj
+
 (defn bench*
   "Repeatedly executes fn and returns time taken to complete execution."
   [nlaps {:keys [nlaps-warmup nthreads as-ns?]
@@ -1082,154 +1034,9 @@
 (defmacro bench [nlaps bench*-opts & body]
   `(bench* ~nlaps ~bench*-opts (fn [] ~@body)))
 
-;;;; Client misc
-
-#+cljs
-(do ; Logging stuff
-
-  (defn log [x]
-    (if (js* "typeof console != 'undefined'")
-      (.log js/console x)
-      (js/print x))
-    nil)
-
-  (defn sayp [& xs]     (js/alert (str/join " " xs)))
-  (defn sayf [fmt & xs] (js/alert (apply format fmt xs)))
-  (defn logp [& xs]     (log (str/join " " xs)))
-  (defn logf [fmt & xs] (log (apply format fmt xs)))
-
-  (def debugf (comp #(str ""        %) logf))
-  (def infof  (comp #(str ""        %) logf))
-  (def warnf  (comp #(str "WARN: "  %) logf))
-  (def errorf (comp #(str "ERROR: " %) logf)))
-
-#+cljs
-(defn get-window-location
-  "Returns browser window's current location. Forgeable."
-  []
-  (let [loc* (.-location js/window)
-        loc
-        {;; Ref. http://bl.ocks.org/abernier/3070589
-         :href     (.-href     loc*) ; "http://www.example.org:80/foo/bar?q=baz#bang"
-         :protocol (.-protocol loc*) ; "http"
-         :hostname (.-hostname loc*) ; "example.org"
-         :host     (.-host     loc*) ; "example.org:80"
-         :pathname (.-pathname loc*) ; "/foo/bar"
-         :search   (.-search   loc*) ; "?q=baz"
-         :hash     (.-hash     loc*) ; "#bang"
-         }]
-    loc))
-
-#+cljs
-(defn set-exp-backoff-timeout! [nullary-f & [nattempt]]
-  (.setTimeout js/window nullary-f (exp-backoff (or nattempt 0))))
-
-;;;; Ajax
-
-#+cljs (def ^:private xhr-pool_ (delay (goog.net.XhrIoPool.)))
-#+cljs
-(defn- get-pooled-xhr!
-  "Returns an immediately available XhrIo instance, or nil. The instance must be
-  released back to pool manually. Use core.async to wait for an available
-  instance, etc."
-  []
-  (let [result (.getObject @xhr-pool_)]
-    (when-not (undefined? result) result)))
-
-#+cljs
-(defn- coerce-xhr-params "[uri method get-or-post-params] -> [uri post-content]"
-  [uri method params] {:pre [(or (nil? params) (map? params))]}
-  (let [?pstr ; URL-encoded string, or nil
-        (when-not (empty? params)
-          (let [s (-> params clj->js gstructs/Map. gquery-data/createFromMap
-                      .toString)]
-            (when-not (str/blank? s) s)))]
-    (case method
-      :get  [(if ?pstr (str uri "?" ?pstr) uri) nil]
-      :post [uri ?pstr])))
-
-#+cljs
-(defn ajax-lite
-  "Alpha - subject to change.
-  Simple+lightweight Ajax via Google Closure.
-  Ref. https://developers.google.com/closure/library/docs/xhrio"
-  [uri {:keys [method params headers timeout resp-type]
-        :or   {method :get timeout 10000 resp-type :auto}}
-   callback]
-  {:pre [(or (nil? timeout) (nneg-int? timeout))]}
-  (if-let [xhr (get-pooled-xhr!)]
-    (try
-      (let [method* (case method :get "GET" :post "POST")
-            params  (map-keys name params)
-            headers (merge {"X-Requested-With" "XMLHTTPRequest"}
-                           (map-keys name headers))
-            ;;
-            [uri* post-content*] (coerce-xhr-params uri method params)
-            headers*
-            (clj->js
-             (if-not post-content* headers
-               (assoc headers "Content-Type"
-                 "application/x-www-form-urlencoded; charset=UTF-8")))]
-
-        (doto xhr
-          (gevents/listenOnce goog.net.EventType/READY
-            (fn [_] (.releaseObject @xhr-pool_ xhr)))
-
-          (gevents/listenOnce goog.net.EventType/COMPLETE
-            (fn wrapped-callback [resp]
-              (let [status       (.getStatus xhr) ; -1 or http-status
-                    got-resp?    (not= status -1)
-                    content-type (when got-resp?
-                                   (.getResponseHeader xhr "Content-Type"))
-                    cb-arg
-                    {;;; Raw stuff
-                     :raw-resp resp
-                     :xhr      xhr ; = (.-target resp)
-                     ;;;
-                     :content-type (when got-resp? content-type)
-                     :content
-                     (when got-resp?
-                       (let [resp-type
-                             (if-not (= resp-type :auto) resp-type
-                               (condp #(str-contains? %2 %1)
-                                   (str content-type) ; Prevent nil
-                                 "/edn"  :edn
-                                 "/json" :json
-                                 "/xml"  :xml
-                                 "/html" :text ; :xml only for text/xml!
-                                 :text))]
-                         (case resp-type
-                           :text (.getResponseText xhr)
-                           :json (.getResponseJson xhr)
-                           :xml  (.getResponseXml  xhr)
-                           :edn  (read-string (.getResponseText xhr)))))
-
-                     :status (when got-resp? status) ; nil or http-status
-                     :error ; nil, error status, or keyword
-                     (if got-resp?
-                       (when-not (<= 200 status 299) status) ; Non 2xx resp
-                       (get {;; goog.net.ErrorCode/NO_ERROR nil
-                             goog.net.ErrorCode/EXCEPTION  :exception
-                             goog.net.ErrorCode/HTTP_ERROR :http-error
-                             goog.net.ErrorCode/ABORT      :abort
-                             goog.net.ErrorCode/TIMEOUT    :timeout}
-                            (.getLastErrorCode xhr) :unknown))}]
-                (callback cb-arg))))
-
-          (.setTimeoutInterval (or timeout 0)) ; nil = 0 = no timeout
-          (.send uri* method* post-content* headers*)))
-
-      (catch js/Error e
-        (logf "Ajax error: %s" e)
-        (.releaseObject @xhr-pool_ xhr)
-        nil))
-
-    ;; Pool failed to return an available xhr instance:
-    (callback {:error :xhr-pool-depleted})))
-
 ;;;; Ring
 
-#+clj
+
 (defn session-swap
   "Small util to help correctly manage (modify) funtional sessions. Please use
   this when writing Ring middleware!"
@@ -1244,14 +1051,14 @@
   (session-swap {:session {:req? true}} {:session {:resp? true}} assoc :new-k :new-v)
   (session-swap {:session {:old? true}} {}                       assoc :new-k :new-v))
 
-#+clj
+
 (defn normalize-headers [req-or-resp]
   (when req-or-resp
     (assoc req-or-resp :headers (map-keys str/lower-case (:headers req-or-resp)))))
 
 (comment (normalize-headers {:headers {"Foo1" "bar1" "FOO2" "bar2" "foo3" "bar3"}}))
 
-#+clj
+
 (do
   (defn- ->body-in-map [x] (when x (if-not (map? x) {:body x} x)))
   (defn set-body      [resp body]    (assoc     (->body-in-map resp) :body   body))
@@ -1262,7 +1069,7 @@
 (comment (merge-headers {:body "foo"} {"BAR" "baz"})
          (merge-headers "foo"         {"bar" "baz"}))
 
-#+clj
+
 (defn redirect-resp
   ([url] (redirect-resp :temp url nil))
   ([type url & [flash]]
